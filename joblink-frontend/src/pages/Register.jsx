@@ -1,17 +1,20 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import API from '../api/axios';
 
 const ROLES = ['CANDIDATE', 'EMPLOYER'];
 
 export default function Register() {
+    const [searchParams] = useSearchParams();
+    const initialRole = ROLES.includes(searchParams.get('role')) ? searchParams.get('role') : 'CANDIDATE';
+
     const [form, setForm] = useState({
         name: '',
         email: '',
         password: '',
         confirmPassword: '',
-        role: 'CANDIDATE',
+        role: initialRole,
     });
     const [errors, setErrors] = useState({});
     const [apiError, setApiError] = useState('');
@@ -70,10 +73,25 @@ export default function Register() {
                     email: loginRes.data.email,
                     role: loginRes.data.role,
                     name: registerRes.data.name || form.name,
-                    userId: registerRes.data.id, // fallback if JWT decode fails
+                    userId: registerRes.data.id,
                 },
                 loginRes.data.token
             );
+
+            // 4. Seed empty profile/company in the respective service DB
+            //    (user-service and profile-service/company-service are separate DBs)
+            try {
+                if (form.role === 'CANDIDATE') {
+                    await API.post('/api/profiles', {
+                        userId: registerRes.data.id,
+                        bio: '',
+                        location: '',
+                        skills: '',
+                    });
+                }
+            } catch {
+                // Non-fatal — user can create profile later from the Profile page
+            }
 
             navigate(loginRes.data.role === 'EMPLOYER' ? '/my-jobs' : '/jobs');
         } catch (err) {

@@ -10,6 +10,41 @@ export default function Navbar() {
         navigate('/');
     };
 
+    // Build nav links from a single source of truth
+    const getNavLinks = () => {
+        if (!isAuthenticated()) {
+            // Logged-out: Home, About Us, Contact only
+            return [
+                { to: '/', label: 'Home' },
+                { to: '/about', label: 'About Us' },
+                { to: '/contact', label: 'Contact' },
+            ];
+        }
+
+        if (isCandidate()) {
+            return [
+                { to: '/', label: 'Home' },
+                { to: '/jobs', label: 'Find Jobs' },
+                { to: '/my-applications', label: 'My Applications' },
+                { to: '/profile', label: 'Profile' },
+            ];
+        }
+
+        if (isEmployer()) {
+            return [
+                { to: '/', label: 'Home' },
+                { to: '/post-job', label: 'Post Job' },
+                { to: '/my-jobs', label: 'My Jobs' },
+                { to: '/company', label: 'Company Profile' },
+            ];
+        }
+
+        // Fallback for any other authenticated role
+        return [{ to: '/', label: 'Home' }];
+    };
+
+    const navLinks = getNavLinks();
+
     return (
         <nav className="flex items-center justify-between px-8 py-4 bg-white border-b border-gray-100 sticky top-0 z-50">
             {/* Logo */}
@@ -19,33 +54,30 @@ export default function Navbar() {
 
             {/* Nav Links */}
             <div className="hidden md:flex items-center gap-8 text-sm text-gray-600">
-                <Link to="/jobs" className="hover:text-gray-900 transition">Find Jobs</Link>
-                {isEmployer() && (
-                    <>
-                        <Link to="/my-jobs" className="hover:text-gray-900 transition">My Jobs</Link>
-                        <Link to="/post-job" className="hover:text-gray-900 transition">Post a Job</Link>
-                        <Link to="/company" className="hover:text-gray-900 transition">Company</Link>
-                    </>
-                )}
-                {isCandidate() && (
-                    <>
-                        <Link to="/my-applications" className="hover:text-gray-900 transition">My Applications</Link>
-                        <Link to="/profile" className="hover:text-gray-900 transition">Profile</Link>
-                    </>
-                )}
-                <Link to="/" className="hover:text-gray-900 transition">About Us</Link>
-                <Link to="/" className="hover:text-gray-900 transition">Contact</Link>
+                {navLinks.map(link => (
+                    <Link key={link.to} to={link.to} className="hover:text-gray-900 transition">
+                        {link.label}
+                    </Link>
+                ))}
             </div>
 
             {/* Auth Buttons */}
             <div className="flex items-center gap-3">
                 {!isAuthenticated() ? (
-                    <Link
-                        to="/login"
-                        className="px-4 py-2 text-sm border border-gray-800 rounded-full text-gray-800 hover:bg-gray-800 hover:text-white transition"
-                    >
-                        Login / Register
-                    </Link>
+                    <div className="flex items-center gap-3">
+                        <Link
+                            to="/login"
+                            className="px-4 py-2 text-sm text-gray-800 hover:text-gray-900 transition font-medium"
+                        >
+                            Login
+                        </Link>
+                        <Link
+                            to="/register"
+                            className="px-4 py-2 text-sm border border-gray-800 rounded-full text-gray-800 hover:bg-gray-800 hover:text-white transition"
+                        >
+                            Register
+                        </Link>
+                    </div>
                 ) : (
                     <div className="flex items-center gap-3">
                         <span className="text-sm text-gray-600">{user?.name || user?.email}</span>

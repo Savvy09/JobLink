@@ -22,7 +22,6 @@ export default function MyApplications() {
                 const apps = Array.isArray(res.data) ? res.data : [];
                 // Sort by appliedAt descending
                 apps.sort((a, b) => new Date(b.appliedAt) - new Date(a.appliedAt));
-                setApplications(apps);
 
                 // Fetch job details for each application
                 const jobIds = [...new Set(apps.map(a => a.jobId).filter(Boolean))];
@@ -40,6 +39,10 @@ export default function MyApplications() {
                     if (data) jobMap[jobId] = data;
                 });
                 setJobDetails(jobMap);
+
+                // Filter out applications whose job was deleted (not in jobMap)
+                const validApps = apps.filter(a => jobMap[a.jobId]);
+                setApplications(validApps);
             } catch {
                 setError('Failed to load your applications.');
             } finally {

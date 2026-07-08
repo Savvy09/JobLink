@@ -35,7 +35,7 @@ export default function Profile() {
                     skills: res.data.skills || '',
                 });
             } catch (err) {
-                if (err.response?.status === 404) {
+                if (err.response?.status === 404 || err.response?.status === 500) {
                     setIsNew(true);
                 } else {
                     addToast('Failed to load profile.', 'error');

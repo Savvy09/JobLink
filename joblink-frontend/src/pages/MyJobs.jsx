@@ -20,6 +20,7 @@ export default function MyJobs() {
     const [applicants, setApplicants] = useState({});
     const [loadingApplicants, setLoadingApplicants] = useState({});
     const [actionLoading, setActionLoading] = useState({});
+    const [candidateInfo, setCandidateInfo] = useState({});
 
     const fetchJobs = useCallback(async () => {
         if (!user?.userId) return;
@@ -38,12 +39,44 @@ export default function MyJobs() {
         fetchJobs();
     }, [fetchJobs]);
 
+    // Fetch candidate user info for a list of candidateIds (batched via Promise.all)
+    const fetchCandidateInfoBatch = async (candidateIds) => {
+        // Filter out IDs we already have cached
+        const idsToFetch = candidateIds.filter(id => id && !candidateInfo[id]);
+        if (idsToFetch.length === 0) return;
+
+        const results = await Promise.all(
+            idsToFetch.map(async (id) => {
+                try {
+                    const res = await API.get(`/api/users/${id}`);
+                    return { id, data: res.data };
+                } catch {
+                    return { id, data: null };
+                }
+            })
+        );
+
+        const newInfo = {};
+        results.forEach(({ id, data }) => {
+            if (data) newInfo[id] = data;
+        });
+
+        if (Object.keys(newInfo).length > 0) {
+            setCandidateInfo(prev => ({ ...prev, ...newInfo }));
+        }
+    };
+
+    // Always re-fetch applicants when expanding (fixes stale data / toggle bug)
     const fetchApplicants = async (jobId) => {
-        if (applicants[jobId]) return; // Already fetched
         setLoadingApplicants(prev => ({ ...prev, [jobId]: true }));
         try {
             const res = await API.get(`/api/applications/job/${jobId}`);
-            setApplicants(prev => ({ ...prev, [jobId]: Array.isArray(res.data) ? res.data : [] }));
+            const apps = Array.isArray(res.data) ? res.data : [];
+            setApplicants(prev => ({ ...prev, [jobId]: apps }));
+
+            // Batch-fetch candidate info for all applicants
+            const candidateIds = apps.map(a => a.candidateId).filter(Boolean);
+            fetchCandidateInfoBatch(candidateIds);
         } catch {
             addToast('Failed to load applicants.', 'error');
         } finally {
@@ -56,6 +89,7 @@ export default function MyJobs() {
             setExpandedJob(null);
         } else {
             setExpandedJob(jobId);
+            // Always re-fetch — no early return for cached data
             fetchApplicants(jobId);
         }
     };
@@ -225,39 +259,50 @@ export default function MyJobs() {
                                             <p className="text-sm text-gray-500 py-4">No applicants yet.</p>
                                         ) : (
                                             <div className="space-y-3">
-                                                {applicants[job.id].map(app => (
-                                                    <div
-                                                        key={app.id}
-                                                        className="flex items-center justify-between gap-4 bg-white rounded-xl p-4 border border-gray-100"
-                                                    >
-                                                        <div className="flex items-center gap-3 min-w-0">
-                                                            <div className="w-9 h-9 bg-[#f5f0eb] rounded-full flex items-center justify-center text-[#b5621b] text-sm font-semibold shrink-0">
-                                                                👤
+                                                {applicants[job.id].map(app => {
+                                                    const candidate = candidateInfo[app.candidateId];
+                                                    const displayName = candidate?.name || 'Candidate';
+                                                    const initial = displayName.charAt(0).toUpperCase();
+
+                                                    return (
+                                                        <div
+                                                            key={app.id}
+                                                            className="flex items-center justify-between gap-4 bg-white rounded-xl p-4 border border-gray-100"
+                                                        >
+                                                            <div className="flex items-center gap-3 min-w-0">
+                                                                <div className="w-9 h-9 bg-[#f5f0eb] rounded-full flex items-center justify-center text-[#b5621b] text-sm font-semibold shrink-0">
+                                                                    {candidate ? initial : '👤'}
+                                                                </div>
+                                                                <div className="min-w-0">
+                                                                    <p className="text-sm font-medium text-gray-800 truncate">
+                                                                        {displayName}
+                                                                    </p>
+                                                                    {app.status === 'HIRED' && candidate?.email && (
+                                                                        <p className="text-xs text-green-600 truncate">
+                                                                            Hired — contact: {candidate.email}
+                                                                        </p>
+                                                                    )}
+                                                                    <p className="text-xs text-gray-400">
+                                                                        Applied {new Date(app.appliedAt).toLocaleDateString()}
+                                                                    </p>
+                                                                </div>
                                                             </div>
-                                                            <div className="min-w-0">
-                                                                <p className="text-sm font-medium text-gray-800 truncate">
-                                                                    Candidate {app.candidateId?.slice(0, 8)}...
-                                                                </p>
-                                                                <p className="text-xs text-gray-400">
-                                                                    Applied {new Date(app.appliedAt).toLocaleDateString()}
-                                                                </p>
+                                                            <div className="flex items-center gap-2 shrink-0">
+                                                                <StatusBadge status={app.status} />
+                                                                <select
+                                                                    value={app.status}
+                                                                    onChange={(e) => handleStatusChange(app.id, e.target.value, job.id)}
+                                                                    disabled={actionLoading[`status-${app.id}`]}
+                                                                    className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-[#b5621b] disabled:opacity-50"
+                                                                >
+                                                                    {APPLICATION_STATUSES.map(s => (
+                                                                        <option key={s} value={s}>{s}</option>
+                                                                    ))}
+                                                                </select>
                                                             </div>
                                                         </div>
-                                                        <div className="flex items-center gap-2 shrink-0">
-                                                            <StatusBadge status={app.status} />
-                                                            <select
-                                                                value={app.status}
-                                                                onChange={(e) => handleStatusChange(app.id, e.target.value, job.id)}
-                                                                disabled={actionLoading[`status-${app.id}`]}
-                                                                className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:border-[#b5621b] disabled:opacity-50"
-                                                            >
-                                                                {APPLICATION_STATUSES.map(s => (
-                                                                    <option key={s} value={s}>{s}</option>
-                                                                ))}
-                                                            </select>
-                                                        </div>
-                                                    </div>
-                                                ))}
+                                                    );
+                                                })}
                                             </div>
                                         )}
                                     </div>

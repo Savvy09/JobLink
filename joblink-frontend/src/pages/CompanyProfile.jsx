@@ -18,6 +18,7 @@ export default function CompanyProfile() {
         name: '',
         description: '',
         industry: '',
+        size: '',
         website: '',
         location: '',
     });
@@ -32,11 +33,12 @@ export default function CompanyProfile() {
                     name: res.data.name || '',
                     description: res.data.description || '',
                     industry: res.data.industry || '',
+                    size: res.data.size || '',
                     website: res.data.website || '',
                     location: res.data.location || '',
                 });
             } catch (err) {
-                if (err.response?.status === 404) {
+                if (err.response?.status === 404 || err.response?.status === 500) {
                     setIsNew(true);
                     setEditing(true);
                 } else {
@@ -67,6 +69,7 @@ export default function CompanyProfile() {
                 name: form.name,
                 description: form.description,
                 industry: form.industry,
+                size: form.size,
                 website: form.website,
                 location: form.location,
             };
@@ -162,6 +165,23 @@ export default function CompanyProfile() {
                                 />
                             </div>
                             <div>
+                                <label className="text-sm font-medium text-gray-600">Company Size</label>
+                                <select
+                                    name="size"
+                                    value={form.size}
+                                    onChange={handleChange}
+                                    className={inputClass}
+                                >
+                                    <option value="">Select size</option>
+                                    <option value="STARTUP">Startup</option>
+                                    <option value="SME">SME</option>
+                                    <option value="LARGE">Large</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div>
                                 <label className="text-sm font-medium text-gray-600">Location</label>
                                 <input
                                     type="text"
@@ -197,6 +217,7 @@ export default function CompanyProfile() {
                                             name: company?.name || '',
                                             description: company?.description || '',
                                             industry: company?.industry || '',
+                                            size: company?.size || '',
                                             website: company?.website || '',
                                             location: company?.location || '',
                                         });

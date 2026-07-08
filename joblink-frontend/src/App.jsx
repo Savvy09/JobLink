@@ -14,6 +14,8 @@ import MyJobs from './pages/MyJobs';
 import MyApplications from './pages/MyApplications';
 import Profile from './pages/Profile';
 import CompanyProfile from './pages/CompanyProfile';
+import About from './pages/About';
+import Contact from './pages/Contact';
 
 import './App.css';
 
@@ -40,6 +42,8 @@ export default function App() {
                         <Route path="/register" element={<Register />} />
                         <Route path="/jobs" element={<Jobs />} />
                         <Route path="/jobs/:id" element={<JobDetail />} />
+                        <Route path="/about" element={<About />} />
+                        <Route path="/contact" element={<Contact />} />
 
                         {/* Employer-only routes */}
                         <Route element={<ProtectedRoute allowedRoles={['EMPLOYER']} />}>
