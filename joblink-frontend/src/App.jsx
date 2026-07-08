@@ -1,8 +1,11 @@
 import { Routes, Route, Outlet } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { CompletionProvider } from './context/CompletionContext';
 import { ToastProvider } from './components/Toast';
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
+import ProfileGate from './components/ProfileGate';
+import CompanyGate from './components/CompanyGate';
 
 import Landing from './pages/Landing';
 import Login from './pages/Login';
@@ -14,6 +17,8 @@ import MyJobs from './pages/MyJobs';
 import MyApplications from './pages/MyApplications';
 import Profile from './pages/Profile';
 import CompanyProfile from './pages/CompanyProfile';
+import PublicCompanyProfile from './pages/PublicCompanyProfile';
+import PublicCandidateProfile from './pages/PublicCandidateProfile';
 import About from './pages/About';
 import Contact from './pages/Contact';
 
@@ -33,33 +38,44 @@ function Layout() {
 export default function App() {
     return (
         <AuthProvider>
-            <ToastProvider>
-                <Routes>
-                    <Route element={<Layout />}>
-                        {/* Public routes */}
-                        <Route path="/" element={<Landing />} />
-                        <Route path="/login" element={<Login />} />
-                        <Route path="/register" element={<Register />} />
-                        <Route path="/jobs" element={<Jobs />} />
-                        <Route path="/jobs/:id" element={<JobDetail />} />
-                        <Route path="/about" element={<About />} />
-                        <Route path="/contact" element={<Contact />} />
+            <CompletionProvider>
+                <ToastProvider>
+                    <Routes>
+                        <Route element={<Layout />}>
+                            {/* Public routes */}
+                            <Route path="/" element={<Landing />} />
+                            <Route path="/login" element={<Login />} />
+                            <Route path="/register" element={<Register />} />
+                            <Route path="/jobs" element={<Jobs />} />
+                            <Route path="/jobs/:id" element={<JobDetail />} />
+                            <Route path="/company/:employerId" element={<PublicCompanyProfile />} />
+                            <Route path="/about" element={<About />} />
+                            <Route path="/contact" element={<Contact />} />
 
-                        {/* Employer-only routes */}
-                        <Route element={<ProtectedRoute allowedRoles={['EMPLOYER']} />}>
-                            <Route path="/post-job" element={<PostJob />} />
-                            <Route path="/my-jobs" element={<MyJobs />} />
-                            <Route path="/company" element={<CompanyProfile />} />
-                        </Route>
+                            {/* Employer-only routes */}
+                            <Route element={<ProtectedRoute allowedRoles={['EMPLOYER']} />}>
+                                <Route path="/company-profile" element={<CompanyProfile />} />
+                                <Route element={<CompanyGate />}>
+                                    <Route path="/post-job" element={<PostJob />} />
+                                    <Route path="/my-jobs" element={<MyJobs />} />
+                                    <Route path="/company" element={<CompanyProfile />} />
+                                    <Route path="/candidates/:userId" element={<PublicCandidateProfile />} />
+                                </Route>
+                            </Route>
 
-                        {/* Candidate-only routes */}
-                        <Route element={<ProtectedRoute allowedRoles={['CANDIDATE']} />}>
-                            <Route path="/my-applications" element={<MyApplications />} />
-                            <Route path="/profile" element={<Profile />} />
+                            {/* Candidate-only routes */}
+                            <Route element={<ProtectedRoute allowedRoles={['CANDIDATE']} />}>
+                                <Route path="/complete-profile" element={<Profile />} />
+                                <Route element={<ProfileGate />}>
+                                    <Route path="/my-applications" element={<MyApplications />} />
+                                    <Route path="/profile" element={<Profile />} />
+                                </Route>
+                            </Route>
                         </Route>
-                    </Route>
-                </Routes>
-            </ToastProvider>
+                    </Routes>
+                </ToastProvider>
+            </CompletionProvider>
         </AuthProvider>
     );
 }
+

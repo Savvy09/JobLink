@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useCompletion } from '../context/CompletionContext';
 import API from '../api/axios';
 import StatusBadge from '../components/StatusBadge';
 import { DetailSkeleton } from '../components/LoadingSkeleton';
@@ -9,6 +10,7 @@ import { useToast } from '../components/Toast';
 export default function JobDetail() {
     const { id } = useParams();
     const { user, isAuthenticated, isCandidate } = useAuth();
+    const { profileComplete } = useCompletion();
     const { addToast } = useToast();
 
     const [job, setJob] = useState(null);
@@ -112,7 +114,9 @@ export default function JobDetail() {
                         <div>
                             <h1 className="text-2xl font-bold text-gray-900">{job.title}</h1>
                             {job.companyName && (
-                                <p className="text-gray-500 mt-1">{job.companyName}</p>
+                                <Link to={`/company/${job.employerId}`} className="text-gray-500 mt-1 hover:text-[#b5621b] hover:underline transition">
+                                    {job.companyName}
+                                </Link>
                             )}
                         </div>
                         <StatusBadge status={job.status} />
@@ -198,6 +202,14 @@ export default function JobDetail() {
                                     </svg>
                                     You have already applied to this job
                                 </div>
+                            ) : !profileComplete ? (
+                                <button
+                                    disabled
+                                    className="w-full py-3.5 bg-gray-300 text-gray-500 rounded-xl font-medium cursor-not-allowed transition"
+                                    title="Complete your profile before applying"
+                                >
+                                    Complete your profile before applying
+                                </button>
                             ) : (
                                 <button
                                     onClick={handleApply}

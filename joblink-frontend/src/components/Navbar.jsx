@@ -1,8 +1,12 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useCompletion } from '../context/CompletionContext';
+
+import CandidateAvatar from './CandidateAvatar';
 
 export default function Navbar() {
     const { isAuthenticated, isEmployer, isCandidate, logout, user } = useAuth();
+    const { profileComplete, companyComplete } = useCompletion();
     const navigate = useNavigate();
 
     const handleLogout = () => {
@@ -22,6 +26,9 @@ export default function Navbar() {
         }
 
         if (isCandidate()) {
+            if (!profileComplete) {
+                return [{ to: '/complete-profile', label: 'Complete Profile' }];
+            }
             return [
                 { to: '/', label: 'Home' },
                 { to: '/jobs', label: 'Find Jobs' },
@@ -31,6 +38,9 @@ export default function Navbar() {
         }
 
         if (isEmployer()) {
+            if (!companyComplete) {
+                return [{ to: '/company-profile', label: 'Complete Company Profile' }];
+            }
             return [
                 { to: '/', label: 'Home' },
                 { to: '/post-job', label: 'Post Job' },
@@ -80,7 +90,10 @@ export default function Navbar() {
                     </div>
                 ) : (
                     <div className="flex items-center gap-3">
-                        <span className="text-sm text-gray-600">{user?.name || user?.email}</span>
+                        <Link to={isCandidate() ? '/profile' : '/company-profile'} className="flex items-center gap-2 hover:bg-gray-50 px-2 py-1 rounded-full transition cursor-pointer">
+                            <CandidateAvatar userId={user?.userId} name={user?.name || user?.email} className="w-8 h-8 text-sm" />
+                            <span className="text-sm font-medium text-gray-700 hidden sm:block">{user?.name || user?.email}</span>
+                        </Link>
                         <button
                             onClick={handleLogout}
                             className="px-4 py-2 text-sm border border-gray-800 rounded-full text-gray-800 hover:bg-gray-800 hover:text-white transition"

@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useCompletion } from '../context/CompletionContext';
 import API from '../api/axios';
 import { useToast } from '../components/Toast';
 import { FormSkeleton } from '../components/LoadingSkeleton';
 
 export default function CompanyProfile() {
     const { user } = useAuth();
+    const { recheckCompletion } = useCompletion();
     const { addToast } = useToast();
 
     const [company, setCompany] = useState(null);
@@ -21,6 +23,7 @@ export default function CompanyProfile() {
         size: '',
         website: '',
         location: '',
+        logoUrl: '',
     });
 
     useEffect(() => {
@@ -36,6 +39,7 @@ export default function CompanyProfile() {
                     size: res.data.size || '',
                     website: res.data.website || '',
                     location: res.data.location || '',
+                    logoUrl: res.data.logoUrl || '',
                 });
             } catch (err) {
                 if (err.response?.status === 404 || err.response?.status === 500) {
@@ -57,8 +61,11 @@ export default function CompanyProfile() {
 
     const handleSave = async (e) => {
         e.preventDefault();
-        if (!form.name.trim()) {
-            addToast('Company name is required.', 'error');
+        
+        // Ensure all fields are filled
+        if (!form.name.trim() || !form.description.trim() || !form.industry.trim() || 
+            !form.size || !form.website.trim() || !form.location.trim() || !form.logoUrl.trim()) {
+            addToast('All fields are required.', 'error');
             return;
         }
 
@@ -72,6 +79,7 @@ export default function CompanyProfile() {
                 size: form.size,
                 website: form.website,
                 location: form.location,
+                logoUrl: form.logoUrl,
             };
 
             let res;
@@ -84,6 +92,7 @@ export default function CompanyProfile() {
             setCompany(res.data);
             setEditing(false);
             addToast('Company profile saved!');
+            await recheckCompletion();
         } catch {
             addToast('Failed to save company profile.', 'error');
         } finally {
@@ -134,6 +143,7 @@ export default function CompanyProfile() {
                                 type="text"
                                 name="name"
                                 placeholder="Your company name"
+                                required
                                 value={form.name}
                                 onChange={handleChange}
                                 className={inputClass}
@@ -141,10 +151,11 @@ export default function CompanyProfile() {
                         </div>
 
                         <div>
-                            <label className="text-sm font-medium text-gray-600">Description</label>
+                            <label className="text-sm font-medium text-gray-600">Description *</label>
                             <textarea
                                 name="description"
                                 placeholder="What does your company do?"
+                                required
                                 value={form.description}
                                 onChange={handleChange}
                                 rows={4}
@@ -154,20 +165,22 @@ export default function CompanyProfile() {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div>
-                                <label className="text-sm font-medium text-gray-600">Industry</label>
+                                <label className="text-sm font-medium text-gray-600">Industry *</label>
                                 <input
                                     type="text"
                                     name="industry"
                                     placeholder="e.g. Technology, Finance"
+                                    required
                                     value={form.industry}
                                     onChange={handleChange}
                                     className={inputClass}
                                 />
                             </div>
                             <div>
-                                <label className="text-sm font-medium text-gray-600">Company Size</label>
+                                <label className="text-sm font-medium text-gray-600">Company Size *</label>
                                 <select
                                     name="size"
+                                    required
                                     value={form.size}
                                     onChange={handleChange}
                                     className={inputClass}
@@ -182,12 +195,25 @@ export default function CompanyProfile() {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div>
-                                <label className="text-sm font-medium text-gray-600">Location</label>
+                                <label className="text-sm font-medium text-gray-600">Location *</label>
                                 <input
                                     type="text"
                                     name="location"
                                     placeholder="e.g. San Francisco, CA"
+                                    required
                                     value={form.location}
+                                    onChange={handleChange}
+                                    className={inputClass}
+                                />
+                            </div>
+                            <div>
+                                <label className="text-sm font-medium text-gray-600">Website *</label>
+                                <input
+                                    type="url"
+                                    name="website"
+                                    placeholder="https://yourcompany.com"
+                                    required
+                                    value={form.website}
                                     onChange={handleChange}
                                     className={inputClass}
                                 />
@@ -195,12 +221,13 @@ export default function CompanyProfile() {
                         </div>
 
                         <div>
-                            <label className="text-sm font-medium text-gray-600">Website</label>
+                            <label className="text-sm font-medium text-gray-600">Logo URL *</label>
                             <input
                                 type="url"
-                                name="website"
-                                placeholder="https://yourcompany.com"
-                                value={form.website}
+                                name="logoUrl"
+                                placeholder="https://yourcompany.com/logo.png"
+                                required
+                                value={form.logoUrl}
                                 onChange={handleChange}
                                 className={inputClass}
                             />
@@ -220,6 +247,7 @@ export default function CompanyProfile() {
                                             size: company?.size || '',
                                             website: company?.website || '',
                                             location: company?.location || '',
+                                            logoUrl: company?.logoUrl || '',
                                         });
                                     }}
                                     className="flex-1 py-3 border border-gray-200 text-gray-600 rounded-xl font-medium hover:bg-gray-50 transition"

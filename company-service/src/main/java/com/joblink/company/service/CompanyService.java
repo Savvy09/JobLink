@@ -30,6 +30,7 @@ public class CompanyService {
 		}
 		company.setWebsite(request.getWebsite());
 		company.setLocation(request.getLocation());
+		company.setLogoUrl(request.getLogoUrl());
 		return mapToResponse(companyRepository.save(company));
 	}
 
@@ -62,6 +63,7 @@ public class CompanyService {
 		}
 		company.setWebsite(request.getWebsite());
 		company.setLocation(request.getLocation());
+		company.setLogoUrl(request.getLogoUrl());
 		return mapToResponse(companyRepository.save(company));
 	}
 

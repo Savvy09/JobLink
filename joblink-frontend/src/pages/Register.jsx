@@ -78,22 +78,8 @@ export default function Register() {
                 loginRes.data.token
             );
 
-            // 4. Seed empty profile/company in the respective service DB
-            //    (user-service and profile-service/company-service are separate DBs)
-            try {
-                if (form.role === 'CANDIDATE') {
-                    await API.post('/api/profiles', {
-                        userId: registerRes.data.id,
-                        bio: '',
-                        location: '',
-                        skills: '',
-                    });
-                }
-            } catch {
-                // Non-fatal — user can create profile later from the Profile page
-            }
-
-            navigate(loginRes.data.role === 'EMPLOYER' ? '/my-jobs' : '/jobs');
+            // The redirect to /complete-profile will be handled by the ProfileGate/CompanyGate
+            navigate('/');
         } catch (err) {
             setApiError(
                 err.response?.data?.message || 'Registration failed. Please try again.'

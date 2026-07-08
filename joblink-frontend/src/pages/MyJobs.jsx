@@ -6,6 +6,7 @@ import StatusBadge from '../components/StatusBadge';
 import { CardSkeleton } from '../components/LoadingSkeleton';
 import EmptyState from '../components/EmptyState';
 import { useToast } from '../components/Toast';
+import CandidateAvatar from '../components/CandidateAvatar';
 
 const APPLICATION_STATUSES = ['APPLIED', 'SHORTLISTED', 'REJECTED', 'HIRED'];
 
@@ -270,13 +271,11 @@ export default function MyJobs() {
                                                             className="flex items-center justify-between gap-4 bg-white rounded-xl p-4 border border-gray-100"
                                                         >
                                                             <div className="flex items-center gap-3 min-w-0">
-                                                                <div className="w-9 h-9 bg-[#f5f0eb] rounded-full flex items-center justify-center text-[#b5621b] text-sm font-semibold shrink-0">
-                                                                    {candidate ? initial : '👤'}
-                                                                </div>
+                                                                <CandidateAvatar userId={app.candidateId} name={displayName} className="w-9 h-9 text-sm" />
                                                                 <div className="min-w-0">
-                                                                    <p className="text-sm font-medium text-gray-800 truncate">
+                                                                    <Link to={`/candidates/${app.candidateId}`} className="text-sm font-medium text-gray-800 truncate hover:text-[#b5621b] hover:underline transition">
                                                                         {displayName}
-                                                                    </p>
+                                                                    </Link>
                                                                     {app.status === 'HIRED' && candidate?.email && (
                                                                         <p className="text-xs text-green-600 truncate">
                                                                             Hired — contact: {candidate.email}

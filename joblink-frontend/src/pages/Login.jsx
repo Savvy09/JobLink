@@ -25,7 +25,7 @@ export default function Login() {
                 { email: res.data.email, role: res.data.role, name: null },
                 res.data.token
             );
-            navigate(res.data.role === 'EMPLOYER' ? '/my-jobs' : '/jobs');
+            navigate('/');
         } catch (err) {
             setError(
                 err.response?.data?.message || 'Invalid email or password'
